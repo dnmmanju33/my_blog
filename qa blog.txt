@@ -1,0 +1,188 @@
+(firstblog) C:\myblog>python manage.py startapp blogapp
+(null): can't open file 'manage.py': [Errno 2] No such file or directory
+
+
+it's because the file(manage.py) was located in a subdirectory. 
+You need to either enter the appropriate subdirectory (with cd) or add it to the filename 
+as you've done in your example.
+
+
+
+(firstblog) C:\myblog\firstblog\blogsite>python manage.py makemigrations blogapp
+Traceback (most recent call last):
+  File "manage.py", line 15, in <module>
+    execute_from_command_line(sys.argv)
+  File "C:\myblog\firstblog\lib\site-packages\django\core\management\__init__.py", line 381, in execute_from_command_line
+    utility.execute()
+  File "C:\myblog\firstblog\lib\site-packages\django\core\management\__init__.py", line 357, in execute
+    django.setup()
+  File "C:\myblog\firstblog\lib\site-packages\django\__init__.py", line 24, in setup
+    apps.populate(settings.INSTALLED_APPS)
+  File "C:\myblog\firstblog\lib\site-packages\django\apps\registry.py", line 112, in populate
+    app_config.import_models()
+  File "C:\myblog\firstblog\lib\site-packages\django\apps\config.py", line 198, in import_models
+    self.models_module = import_module(models_module_name)
+  File "C:\myblog\firstblog\lib\importlib\__init__.py", line 127, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+  File "<frozen importlib._bootstrap>", line 1006, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 983, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 967, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 677, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 728, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "C:\myblog\firstblog\blogsite\blogapp\models.py", line 7, in <module>
+    class Post(models.Model):
+  File "C:\myblog\firstblog\blogsite\blogapp\models.py", line 14, in Post
+    author = models.ForeignKey(User, related_name='blog_post')
+TypeError: __init__() missing 1 required positional argument: 'on_delete'
+
+(firstblog) C:\myblog\firstblog\blogsite>python manage.py makemigrations blogapp
+Traceback (most recent call last):
+  File "manage.py", line 15, in <module>
+    execute_from_command_line(sys.argv)
+  File "C:\myblog\firstblog\lib\site-packages\django\core\management\__init__.py", line 381, in execute_from_command_line
+    utility.execute()
+  File "C:\myblog\firstblog\lib\site-packages\django\core\management\__init__.py", line 357, in execute
+    django.setup()
+  File "C:\myblog\firstblog\lib\site-packages\django\__init__.py", line 24, in setup
+    apps.populate(settings.INSTALLED_APPS)
+  File "C:\myblog\firstblog\lib\site-packages\django\apps\registry.py", line 112, in populate
+    app_config.import_models()
+  File "C:\myblog\firstblog\lib\site-packages\django\apps\config.py", line 198, in import_models
+    self.models_module = import_module(models_module_name)
+  File "C:\myblog\firstblog\lib\importlib\__init__.py", line 127, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+  File "<frozen importlib._bootstrap>", line 1006, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 983, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 967, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 677, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 728, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "C:\myblog\firstblog\blogsite\blogapp\models.py", line 7, in <module>
+    class Post(models.Model):
+  File "C:\myblog\firstblog\blogsite\blogapp\models.py", line 14, in Post
+    author = models.ForeignKey(User, related_name='blog_posts')
+TypeError: __init__() missing 1 required positional argument: 'on_delete'
+
+
+In the above error shows that "on_delete" agrument missing in the Foreignkey line(modal.py).
+hence you need to add the "on_delete" option in the models.Foreignkey as shown in the below 
+EX:class AbstractCar(models.Model):
+    manufacturer = models.ForeignKey('Manufacturer', on_delete=models.CASCADE)
+
+
+
+
+
+
+
+
+
+
+"""blogsite URL Configuration
+
+The `urlpatterns` list routes URLs to views. For more information please see:
+    https://docs.djangoproject.com/en/2.1/topics/http/urls/
+Examples:
+Function views
+    1. Add an import:  from my_app import views
+    2. Add a URL to urlpatterns:  path('', views.home, name='home')
+Class-based views
+    1. Add an import:  from other_app.views import Home
+    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
+Including another URLconf
+    1. Import the include() function: from django.urls import include, path
+    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
+"""
+from django.contrib import admin
+from django.urls import path
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+]
+
+
+
+
+
+
+
+
+
+
+
+
+
+from django.db import models
+from django.utils import timezone
+from django.contrib.auth.models import User
+
+# Custom Manager
+
+class PublishedManager(models.Manager):
+    def get_queryset(self):
+        return super(PublishedManager,self).get_queryset().filter(status='published')
+
+
+# Our Post Model
+
+class Post(models.Model):
+    STATUS_CHOICES = (
+        ('draft', 'Draft'),
+        ('published', 'Published'),
+    )
+    title = models.CharField(max_length=250)
+    slug = models.SlugField(max_length=250, unique_for_date='publish')
+    author = models.ForeignKey(User, related_name='blog_posts')
+    body = models.TextField()
+    publish = models.DateTimeField(default=timezone.now)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='draft')
+
+    # The default manager
+    objects = models.Manager()
+
+    # Custom made manager
+    published = PublishedManager()
+
+    class Meta:
+        ordering = ('-publish',)
+
+    def __str__(self):
+        return self.title
+
+
+
+
+
+
+
+
+
+
+
+
+
+from django.conf.urls import include, url
+from django.contrib import admin
+
+urlpatterns = [
+    url(r'^admin/', admin.site.urls),
+    url(r'blog/', include('blog.urls', namespace='blog', app_name='blog')),
+]
+
+
+
+
+
+
+
+
+from django.conf.urls import url
+from . import views
+urlpatterns = [
+    url(r'^$', views.post_list, name='post_list'),
+    url(r'^(?P<year>\d{4})/(?P<month>\d{2})/(?P<day>d{2})/(?P<post>
+    [-/w]+)/$', views.post_detail, name='post_detail')
+    ]
